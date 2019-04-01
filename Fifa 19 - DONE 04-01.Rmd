@@ -1,0 +1,972 @@
+---
+title: "Fifa 19: Exploration"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE, warning=FALSE, message=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+<div class="subsectionbox">
+  <h5> Learning Objectives </h5>
+</div>
+
+1.  Cleaning up data
+2.  Exploring data through plots
+3.  Conducting Hypothesis tests between 2 populations
+
+***
+
+**Load libraries**
+<br/>
+Main libraries: `ggplot2`, `tidyverse`, `dplyr`, `gridExtra`, `stringr`.
+```{r libraries, warning=FALSE, echo=FALSE, message=FALSE}
+#install.packages('ggplot2', lib="C:/temp")
+#install.packages('stringr', lib="C:/temp")
+#install.packages('ggplot2', lib="C:/temp")
+
+#library(tidyvers)
+# library("readr", lib="C:/Rpackages")
+# library("rstudioapi", lib="C:/Rpackages")
+# library("tidyr", lib="C:/Rpackages")
+# library("tidyverse", lib="C:/Rpackages")
+
+# install.packages('crayon', lib="C:/temp")
+# install.packages('labeling', lib="C:/temp")
+# install.packages('withr', lib="C:/temp")
+# install.packages('ggplot2', lib="C:/temp")
+
+# install.packages('rstudioapi', lib="C:/temp")
+# install.packages('cli', lib="C:/temp")
+# install.packages('tibble', lib="C:/temp")
+# install.packages('tidyr', lib="C:/temp")
+# install.packages('readr', lib="C:/temp")
+# install.packages('purrr', lib="C:/temp")
+# install.packages('dplyr', lib="C:/temp")
+# install.packages('forcats', lib="C:/temp")
+# install.packages('tidyverse', lib="C:/temp")
+# install.packages('stringr', lib="C:/temp")
+# install.packages('gridExtra', lib="C:/temp")
+# install.packages('caret', lib="C:/temp")
+# install.packages('ggpubr', lib="C:/temp")
+
+# install.packages('corrplot', lib="C:/temp")
+library('corrplot', lib="C:/temp")
+
+library(crayon, lib="C:/temp")
+library(labeling, lib="C:/temp")
+library(withr, lib="C:/temp")
+library(ggplot2, lib="C:/temp")
+
+library(rstudioapi, lib="C:/temp")
+library(cli, lib="C:/temp")
+library(tibble, lib="C:/temp")
+library(tidyr, lib="C:/temp")
+library(readr, lib="C:/temp")
+library(purrr, lib="C:/temp")
+library(dplyr, lib="C:/temp")
+library(forcats, lib="C:/temp")
+library(backports, lib="C:/temp")
+library(magrittr, lib="C:/temp")
+
+library('gridExtra', lib="C:/temp")
+library('stringr', lib="C:/temp")
+library('tidyverse', lib="C:/temp")
+library('caret', lib="C:/temp")
+library('ggpubr', lib="C:/temp")
+library(grid)
+
+# library(ggplot2)
+# library(stringr)
+# library(tidyverse)
+# library(caret)
+# library(ggpubr)
+# library(gridExtra)
+# library(grid)
+# library(corrplot)
+```
+<!-- CSS | CSS | CSS | CSS | CSS | CSS | CSS | CSS -->
+```{css echo=FALSE}
+html *
+{
+  #font-family: Verdana;
+}
+
+.sectionbox {
+  border-radius: 10px;
+  background-color: #641E16;
+}
+h3 {
+  text-indent: 5%;
+  font-family: Century Gothic;
+  color: white;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+
+.subsectionbox {
+  #border-radius: 10px;
+  #background-color: #EBF5FB;
+}
+
+h6 {
+  text-indent: 2%;
+  font-family: Century Gothic;
+  color: blue;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+}
+
+h5 {
+  text-indent: 2%;
+  font-family: Century Gothic;
+  color: blue;
+  #text-decoration: underline;
+  padding-top: .5rem;
+  padding-bottom: .5rem;
+}
+
+h4 {
+  text-indent: 5%;
+  font-family: Century Gothic;
+  color: white;
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+}
+```
+<br/>
+**Load data**
+<br/>
+From Kaggle datasets: FIFA 19 <br />
+Link: https://www.kaggle.com/karangadiya/fifa19
+```{r read data, echo=FALSE}
+df <- read.csv('fifa19/data.csv')
+print(c('Original size: ', paste(dim(df)[1], dim(df)[2], sep = ' x ')))
+```
+***
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<div class="sectionbox">
+  <h4> Section 1. Clean up data </h4>
+</div>
+***
+<div class="subsectionbox">
+  <h5> 1.1 |  --- Check for NaN and players without Clubs </h5>
+</div>
+<p> Checking for NaN entries, in which case, those rows are removed. Additionally, there are players without a current club, as such their Wage and Value are 0. The corresponding rows to those players are also removed. </p>
+```{r NaN and No-club removal}
+df <- na.omit(df)
+df <- df[-which(df$Club == ''),]
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 1.2 |  ---     Narrow down selected columns </h5>
+</div>
+<p> From the full dataset, select the following variables: 
+`ID`, `Name`, `Age`, `Nationality`, `Overall`, `Potential`, `Club`, `Value`, `Wage`, `Preferred.Foot`, `International.Reputation`, `Position`, `Jersey.Number`, `Height`, `Weight`, `Release.Clause`.</p>
+
+Also convert:
+
+1.  `Overall`, `Potential` from interger to numeric.
+2.  `Club` from character to factor.
+```{r Narrow down wanted attributes, echo=FALSE}
+attr <- c('ID', 'Name', 'Age', 'Nationality', 'Overall', 
+          'Potential', 'Club', 'Value', 'Wage',
+          'Preferred.Foot', 'International.Reputation', 'Position', 
+          'Jersey.Number', 'Height', 'Weight', 'Release.Clause')
+df <- df[,attr]
+df$ID <- as.factor(df$ID)
+df$Overall <- as.numeric(df$Overall)
+df$Potential <- as.numeric(df$Potential)
+df$Club <- as.factor(df$Club)
+df$International.Reputation <- as.factor(df$International.Reputation)
+df$Jersey.Number <- as.factor(df$Jersey.Number)
+
+print(c('Current size: ', paste(dim(df)[1], dim(df)[2], sep = ' x ')))
+
+rm(attr)
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 1.3 |  --- Reformat 'Value', 'Wage', 'Release Clause' </h5>
+</div>
+<p> When read into R, the character for Euro sign is not properly displayed, for example: </p>
+```{r echo=FALSE}
+df[1,c('Value','Wage', 'Release.Clause')]
+```
+**Reformat:** All monetary units in the data is Euro.
+```{r reformat Value and Wage, echo=FALSE}
+x <- as.character(df$Value)
+y <- as.character(df$Wage)
+z <- as.character(df$Release.Clause)
+x <- gsub(".*�", "", x)
+y <- gsub(".*�", "", y)
+z <- gsub(".*�", "", z)
+
+for (i in 1:nrow(df)) {
+  if (toupper(str_sub(x[i], -1, -1)) == 'M') {       
+    x[i] <- gsub('M', '', x[i])                      
+    x[i] <- as.numeric(x[i]) * 1000000               
+  }
+  if (toupper(str_sub(x[i], -1, -1)) == 'K') {       
+    x[i] <- gsub('K', '', x[i])                      
+    x[i] <- as.numeric(x[i]) * 1000                  
+  }
+  if (toupper(str_sub(y[i], -1, -1)) == 'M') {       
+    y[i] <- gsub('M', '', y[i])                      
+    y[i] <- as.numeric(y[i]) * 1000000               
+  }
+  if (toupper(str_sub(y[i], -1, -1)) == 'K') {       
+    y[i] <- gsub('K', '', y[i])                      
+    y[i] <- as.numeric(y[i]) * 1000                  
+  }
+  if (toupper(str_sub(z[i], -1, -1)) == 'M') {       
+    z[i] <- gsub('M', '', z[i])                      
+    z[i] <- as.numeric(z[i]) * 1000000               
+  }
+  if (toupper(str_sub(z[i], -1, -1)) == 'K') {       
+    z[i] <- gsub('K', '', z[i])                      
+    z[i] <- as.numeric(z[i]) * 1000                  
+  }
+}
+x <- as.numeric(x)
+y <- as.numeric(y)
+z <- as.numeric(z)
+df$Value <- x
+df$Wage <- y
+df$Release.Clause <- z
+rm(x,y,z,i)
+
+df[1,c('Value','Wage', 'Release.Clause')]
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 1.4 |  --- Reclassify positions </h5>
+</div>
+<p> There are over 20 positions in the original dataset, for example: </p>
+```{r, echo=FALSE}
+unique(df$Position)
+```
+**Reclassify into:**
+
+1.  `Position_2` simpler positions
+2.  `Position_Horizontal` GK - Center - Wing
+3.  `Position_Vertical` GK - Defense - Midfield - Attack
+```{r Reclassify positions, echo=FALSE}
+mapping_pos = data.frame(
+  Position = c('GK', 
+              'CB', 'LCB', 'RCB', 
+              'LB', 'RB', 'LWB', 'RWB', 
+              'CM', 'CAM', 'LAM', 'RAM', 
+              'CDM', 'LDM', 'RDM', 'LCM', 'RCM',
+              'LM', 'RM',
+              'ST', 'CF', 'LF', 'RF', 'LS', 'RS',
+              'LW', 'RW'),
+  Position_2 = c( 'GK', 
+                  'CB', 'CB', 'CB', 
+                  'LB', 'RB', 'LWB', 'RWB', 
+                  'CM', 'CM', 'CM', 'CM', 
+                  'CM', 'CM', 'CM', 'CM', 'CM',
+                  'LM', 'RM',
+                  'ST', 'ST', 'ST', 'ST', 'ST', 'ST',
+                  'LW', 'RW'),
+  Position_Horizontal = c( 'GK', 
+                  'Center', 'Center', 'Center', 
+                  'Wing', 'Wing', 'Wing', 'Wing', 
+                  'Center', 'Center', 'Center', 'Center', 
+                  'Center', 'Center', 'Center', 'Center', 'Center',
+                  'Wing', 'Wing',
+                  'Center', 'Center', 'Center', 'Center',
+                  'Center', 'Center',
+                  'Wing', 'Wing'),
+  Position_Vertical = c( 'GK', 
+                  'Defense', 'Defense', 'Defense', 
+                  'Defense', 'Defense', 'Defense', 'Defense', 
+                  'Midfield', 'Midfield', 'Midfield', 'Midfield', 
+                  'Midfield', 'Midfield', 'Midfield', 'Midfield',
+                  'Midfield',
+                  'Midfield', 'Midfield',
+                  'Attack', 'Attack', 'Attack', 'Attack', 'Attack',
+                  'Attack',
+                  'Attack', 'Attack')
+)
+
+df <- merge(df, mapping_pos[, c('Position', 'Position_2', 'Position_Horizontal', 'Position_Vertical')], by = 'Position', all.x = TRUE)
+rm(mapping_pos)
+
+### Rearrange the columns
+df <- df[c(2:16,1,17:ncol(df))]
+### Rearrange the rows by Overall
+df <- df[order(df$Overall, decreasing = TRUE),]
+
+unique(df$Position_2)
+unique(df$Position_Horizontal)
+unique(df$Position_Vertical)
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 1.5 |  --- Rename club names </h5>
+</div>
+<p> Like for 'Wage' above, when read into R, special characters are not properly displayed, for example: </p>
+```{r echo=FALSE}
+unique(df$Club)[c(8,9)]
+```
+<p> Rename clubs from top 5 leagues: `Serie A`, `EPL`, `La Liga`, `Bundesliga`, `Ligue 1` </p>
+```{r echo=FALSE}
+original_club_names <- c('Atlético Madrid', 'FC Bayern München', 'AS Saint-�???tienne', '1. FC Köln', 'CD Leganés', '1. FC Nürnberg', 'Deportivo Alavés', 'Borussia Mönchengladbach', 'Nîmes Olympique')
+new_club_names <- c('Atletico Madrid', 'FC Bayern Munchen', 'AS Saint-Etienne', '1. FC Koln', 'CD Leganes', '1. FC Nurnberg', 'Deportivo Alaves', 'Borussia Munchengladbach', 'Nimes Olympique')
+
+for (i in 1:length(original_club_names)) {
+  df$Club <- gsub( original_club_names[i], new_club_names[i], df$Club)
+} 
+rm(i, original_club_names, new_club_names)
+unique(df$Club)[c(8,9)]
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 1.6 |  --- Label league for top 5 leagues </h5>
+</div>
+
+`Serie A`, `EPL`, `La Liga`, `Bundesliga`, `Ligue 1`
+```{r Label league, echo=FALSE}
+serie_A_clubs <- c('Juventus', 'Napoli', 'Milan', 'Inter',
+                   'Lazio', 'Roma', 'Atalanta', 'Torino',
+                   'Sassuolo', 'Sampdoria', 'Chievo Verona', 'Genoa',
+                   'Cagliari', 'Fiorentina', 'SPAL', 'Frosinone',
+                   'Parma', 'Bologna', 'Udinese', 'Empoli')
+l1 <- replicate( length(serie_A_clubs), 'Serie A')
+
+epl_clubs <- c('Manchester United', 'Manchester City', 'Chelsea', 'Tottenham Hotspur',
+               'Liverpool', 'Arsenal', 'Leicester City', 'Everton',
+               'West Ham United', 'Wolverhampton Wanderers', 'Crystal Palace', 'Fulham',
+               'Watford', 'Burnley', 'Stoke City', 'Southampton',
+               'Bournemouth', 'Brighton & Hove Albion', 'Newcastle United', 'Huddersfield Town')
+l2 <- replicate( length(epl_clubs), 'EPL')
+
+la_liga_clubs <- c('FC Barcelona', 'Real Madrid', 'Atletico Madrid', 'Valencia CF',
+                  'Real Betis', 'RC Celta', 'Real Sociedad', 'Villarreal CF',
+                  'Sevilla FC', 'Athletic Club de Bilbao', 'Levante UD', 'SD Eibar', 
+                  'Deportivo Alaves', 'Girona FC', 'Getafe CF', 'RCD Espanyol', 
+                  'Rayo Vallecano', 'SD Huesca', 'CD Leganes', 'Real Valladolid CF')
+l3 <- replicate( length(la_liga_clubs), 'La Liga')
+
+bundesliga_clubs <- c('FC Bayern Munchen','Borussia Dortmund','FC Schalke 04','Bayer 04 Leverkusen',
+                      'RB Leipzig', '1. FC Koln', 'TSG 1899 Hoffenheim', 'Borussia Munchengladbach',
+                      'Hertha BSC', 'SV Werder Bremen', 'VfL Wolfsburg', 'VfB Stuttgart',
+                      'Eintracht Frankfurt', '1. FSV Mainz 05', 'FC Augsburg', 'SC Freiburg', 
+                      'Hannover 96', 'Hamburger SV')
+l4 <- replicate( length(bundesliga_clubs), 'Bundesiga')
+
+ligue_1_clubs <- c('Paris Saint-Germain', 'Olympique Lyonnais', 'Olympique de Marseille', 'AS Monaco',
+                   'AS Saint-Etienne', 'Toulouse Football Club', 'Montpellier HSC', 'Stade Rennais FC', 
+                   'FC Nantes', 'OGC Nice', 'FC Girondins de Bordeaux', 'RC Strasbourg Alsace',
+                   'Amiens SC', 'LOSC Lille', 'Dijon FCO', 'Nimes Olympique',
+                   'Angers SCO', 'Stade de Reims')
+l5 <- replicate( length(ligue_1_clubs), 'Ligue 1')
+
+eutop5 <- c(serie_A_clubs, epl_clubs, la_liga_clubs, bundesliga_clubs, ligue_1_clubs)
+l <- c(l1, l2, l3, l4, l5)
+
+league <- data.frame( Club = eutop5, League = l)
+
+df <- merge(df, league[, c('Club', 'League')], by = 'Club', all.x = TRUE)
+
+### Do NOT remove var eutop5, to be used later when partition the data set
+rm(l1,l2,l3,l4,l5,l)
+rm(serie_A_clubs, epl_clubs, la_liga_clubs, bundesliga_clubs, ligue_1_clubs)
+#rm(league)
+
+### Rearrange the columns
+df <- df[c(2:4,1,ncol(df),5:(ncol(df)-1))]
+### Rearrange the rows by Overall
+df <- df[order(df$Overall, decreasing = TRUE),]
+
+unique(df$League)
+```
+<br/><br/><br/>
+
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!-- | SECTION 2 | SECTION 2 | SECTION 2 | SECTION 2 | ------>
+***
+<div class="sectionbox">
+  <h4> Section 2: Plots </h4>
+</div>
+***
+<div class="subsectionbox">
+  <h5> 2.1 |  --- Wage against Overall and Vertical Positions </h5>
+</div>
+```{r echo=FALSE}
+p <- ggplot(df,
+            aes(x=Overall, y = Wage, color=Position_Vertical)) +
+  geom_jitter(position = position_jitter(height = .1)) +
+  ggtitle('Wage against Overall and Vertical Positions') +
+  ylab('Wage')
+p
+rm(p)
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 2.2 |  --- Wage vs. Vertical Positions </h5>
+</div>
+<p> Boxplot: Wage against Vertical Positions for each of top 5 leagues + rest </p>
+```{r echo=FALSE}
+p <- ggplot(df, aes(x = Position_Vertical, y = Wage, color = League)) +
+  geom_boxplot() +
+  xlab('Vertical Positions')
+p
+rm(p)
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 2.3 |  --- Wage vs. Vertical Positions 2 </h5>
+</div>
+<p> Boxplot: Wage against Vertical Positions for each of top 5 leagues <br/>
+For comparison, the horizontal lines are at 10,000 euro, 50,000 euro, and 100,000 euro. </p>
+```{r echo=FALSE}
+top5 <- subset(df, Club %in% eutop5)
+rest <- subset(df, !(Club %in% eutop5))
+
+p <- ggplot(top5, aes(x = Position_Vertical, y = Wage, color = League)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 10000, linetype='dashed') +
+  geom_hline(yintercept = 50000, linetype='dashed') +
+  geom_hline(yintercept = 100000, linetype='dashed') +
+  xlab('Vertical Positions')
+p
+rm(p)
+```
+<br/><br/><br/>
+
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!-- | SECTION 3 | SECTION 3 | SECTION 3 | SECTION 3 | ------>
+***
+<div class="sectionbox">
+  <h4> Section 3: Distributions of Wage, Overall, and Potential </h4>
+</div>
+***
+
+<font color = 'blue'> **Questions to Explore:** </font>
+
+**Differences between top 5 leagues and the rest**
+
+***
+#### Partition dataset into top5 vs. rest
+```{r echo=FALSE}
+top5 <- subset(df, Club %in% eutop5)
+rest <- subset(df, !(Club %in% eutop5))
+print(paste('There are ', nrow(top5), 'playes in top 5 leagues.'))
+print(paste('There are ', nrow(rest), 'playes in the remaining leagues.'))
+```
+***
+**Preliminary plots of densities**
+```{r function for multiple plots, echo=FALSE}
+grid_arrange_shared_legend_1col <- function(...) {
+    plots <- list(...)
+    g <- ggplotGrob(plots[[1]] + theme(legend.position="bottom"))$grobs
+    legend <- g[[which(sapply(g, function(x) x$name) == "guide-box")]]
+    lheight <- sum(legend$height)
+    grid.arrange(
+        do.call(arrangeGrob, lapply(plots, function(x)
+            x + theme(legend.position="none"))),
+        legend,
+        ncol = 1,
+        heights = unit.c(unit(1, "npc") - lheight, lheight))
+}
+```
+
+```{r echo=FALSE}
+p1 <- ggplot(df, aes(x = Wage, color = League)) + geom_density()
+p2 <- ggplot(df, aes(x = Overall, color = League)) + geom_density()
+p3 <- ggplot(df, aes(x = Potential, color = League)) + geom_density()
+
+grid_arrange_shared_legend_1col(p1, p2, p3)
+rm(p1, p2, p3)
+```
+<br/>
+
+<h5>Remarks:</h5>
+
+>     As seen from the graph, there seems to be considerable diffferences between players from top 5 leagues and the rest. As such, I am looking further into the distributions among the top 5.
+
+***
+
+#### <font color = 'blue'> Further look into distribution of Wage, Overall, and Potential across top5 leagues </font>
+<p> Densities of Wage, Overall, Potential among the top 5 leagues. </p>
+```{r echo=FALSE}
+p1 <- ggplot(top5, aes(x = Wage, color = League)) + geom_density()
+p2 <- ggplot(top5, aes(x = Overall, color = League)) + geom_density()
+p3 <- ggplot(top5, aes(x = Potential, color = League)) + geom_density()
+grid_arrange_shared_legend_1col(p1, p2, p3)
+rm(p1, p2, p3)
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 3.1 |  --- Wage </h5>
+</div>
+<p> Quantiles of Wage among top 5 leagues: </p>
+```{r echo=FALSE}
+top5_wage <- data.frame(matrix(nrow = 5))
+top5_wage <- cbind(c('Bundesliga', 'EPL', 'La Liga', 'Ligue 1', 'Serie A'))
+
+n <- seq(.1, 1, .1)
+for (i in 1:length(n)) {
+  temp <- data.frame(tapply(top5$Wage, top5$League, quantile, probs = n[i]))
+  top5_wage <- cbind(top5_wage, temp)
+}
+colnames(top5_wage) <- c('League', paste(n*100, '%', sep = ''))
+top5_wage <- as.data.frame(t(top5_wage[,-1]))
+top5_wage
+rm(temp, i, n)
+```
+<br/>
+
+***
+#### <font color = 'purple'> Is Average Wage in EPL higher than other leagues? </font>
+***
+
+<p> From the graph and table above, it appears that the average wage is higher in EPL than in other leagues. To verify, conduct the Hypothesis Test: </p>
+$$H_0: \mu_{E} = \mu_{O}$$
+$$H_1: \mu_{E} > \mu_{O}$$
+where $\mu_E$ is average wage in EPL, $\mu_O$ is average wage in other leagues.
+
+From the dataset, we have:
+```{r include=FALSE}
+x_E <- mean(subset(top5, League == 'EPL')$Wage)
+x_O <- mean(subset(top5, League != 'EPL')$Wage)
+s_E <- sd(subset(top5, League == 'EPL')$Wage)
+s_O <- sd(subset(top5, League != 'EPL')$Wage)
+n_E <- nrow(subset(top5, League == 'EPL'))
+n_O <- nrow(subset(top5, League != 'EPL'))
+            
+
+table(top5$League == 'EPL')
+```
+
+| League | $\mu$  |           | $s$   |           | $n$  |
+|-------|---------|-----------|-------|-----------|------|
+| EPL   | $\mu_E$ | 52,813.95 | $s_E$ | 52,173.56 | 645  |
+| Other | $\mu_O$ | 29,120.27 | $s_O$ | 41,807.51 | 2195 |
+
+Test statistics, given sample variance, use the T-test:
+$$ 
+t = \frac{\bar{x}_E - \bar{x}_O}{\sqrt{\frac{s_E^2}{n_E} + \frac{s_O^2}{n_O}}} 
+$$
+
+$$
+df = \frac{\Big[\frac{s_E^2}{n_E} + \frac{s_O^2}{n_O}\Big]^2}
+{\bigg[\frac{(s_E^2/n_E)^2}{n_E - 1}\bigg] + \bigg[\frac{(s_O^2/n_O)^2}{n_O - 1}\bigg]
+}
+$$
+
+```{r t-test functions, include=FALSE}
+tTest <- function(x_E, x_O, s_E, s_O, n_E, n_O) {
+  e = s_E^2/n_E
+  o = s_O^2/n_O
+  se = sqrt(e + o)
+  t = round((x_E - x_O) / se,4)
+  return(t)
+}
+
+degF <- function(x_E, x_O, s_E, s_O, n_E, n_O) {
+  e = s_E^2/n_E
+  o = s_O^2/n_O
+  degf = round(((e + 0)^2) / (e^2/(n_E - 1) + (o^2/(n_O - 1)) ), 0)
+  return(degf)
+}
+```
+Given the data from top5:
+```{r echo=FALSE}
+t <- tTest(x_E, x_O, s_E, s_O, n_E, n_O)
+degf <- degF(x_E, x_O, s_E, s_O, n_E, n_O)
+
+print(paste('t-stat = ', t, sep = ''))
+print(paste('degree of freedom = ', degf, sep = ''))
+```
+At $\alpha = .01$, degree of freedom = 637
+```{r echo=FALSE}
+t_01 <- round(qt(.99, degf),4)
+print(paste('t_alpha = ', t_01, sep = ''))
+```
+Conclusion:
+$$ t = 10.5786 > t_{\alpha} = 2.3322 \implies \text{Reject } H_0$$
+As such, at the $99\%$ confidence level, it appears that the Average Wage in EPL is higher than in other leagues. <br/>
+
+***
+#### <font color = 'purple'> Does this lead to higher Average Overall among EPL playes? </font>
+***
+<div class="subsectionbox">
+  <h5> 3.2 |  --- Overall </h5>
+</div>
+<p> Quantiles of Overall among top 5 leagues: </p>
+```{r echo=FALSE}
+top5_overall <- data.frame(matrix(nrow = 5))
+top5_overall <- cbind(c('Bundesliga', 'EPL', 'La Liga', 'Ligue 1', 'Serie A'))
+
+n <- seq(.1, 1, .1)
+for (i in 1:length(n)) {
+  temp <- data.frame(tapply(top5$Overall, top5$League, quantile, probs = n[i]))
+  top5_overall <- cbind(top5_overall, round(temp,0))
+}
+colnames(top5_overall) <- c('League', paste(n*100, '%', sep = ''))
+top5_overall <- as.data.frame(t(top5_overall[,-1]))
+top5_overall
+rm(temp, n, i)
+```
+Is Average Overall in EPL higher than other leagues?
+$$H_0: \mu_{E} = \mu_{O}$$
+$$H_1: \mu_{E} > \mu_{O}$$
+where $\mu_E$ is average Overall in EPL, $\mu_O$ is average Overall in other leagues.
+
+From the dataset, we have:
+```{r include=FALSE}
+x_E <- mean(subset(top5, League == 'EPL')$Overall)
+x_O <- mean(subset(top5, League != 'EPL')$Overall)
+s_E <- sd(subset(top5, League == 'EPL')$Overall)
+s_O <- sd(subset(top5, League != 'EPL')$Overall)
+n_E <- nrow(subset(top5, League == 'EPL'))
+n_O <- nrow(subset(top5, League != 'EPL'))
+            
+
+table(top5$League == 'EPL')
+```
+
+| League | $\mu$  |         | $s$   |        | $n$  |
+|-------|---------|---------|-------|--------|------|
+| EPL   | $\mu_E$ | 72.7597 | $s_E$ | 8.4440 | 645  |
+| Other | $\mu_O$ | 72.6820 | $s_O$ | 7.0087 | 2195 |
+
+Similarly, given sample variance, use the T-test:
+```{r echo=FALSE}
+t <- tTest(x_E, x_O, s_E, s_O, n_E, n_O)
+degf <- degF(x_E, x_O, s_E, s_O, n_E, n_O)
+
+print(paste('t-stat = ', t, sep = ''))
+print(paste('degree of freedom = ', degf, sep = ''))
+```
+At $\alpha = .01$, degree of freedom = 636
+```{r echo=FALSE}
+t_01 <- round(qt(.99, degf),4)
+print(paste('t_alpha = ', t_01, sep = ''))
+```
+Conclusion:
+$$ t = 0.2131 < t_{\alpha} = 2.3322 \implies \text{Fail to Reject } H_0$$
+<p> As such, at the $99\%$ confidence level, there does not appear to have reasons that the Average Overall in EPL is higher than that of other leagues. </p>
+<br/>
+
+***
+#### <font color = 'purple'> What about Potential? </font>
+***
+<div class="subsectionbox">
+  <h5> 3.3 |  --- Potential </h5>
+</div>
+<p> Quantiles of Potential among top 5 leagues: </p>
+```{r echo=FALSE}
+top5_potential <- data.frame(matrix(nrow = 5))
+top5_potential <- cbind(c('Bundesliga', 'EPL', 'La Liga', 'Ligue 1', 'Serie A'))
+
+n <- seq(.1, 1, .1)
+for (i in 1:length(n)) {
+  temp <- data.frame(tapply(top5$Potential, top5$League, quantile, probs = n[i]))
+  top5_potential <- cbind(top5_potential, round(temp,0))
+}
+colnames(top5_potential) <- c('League', paste(n*100, '%', sep = ''))
+top5_potential <- as.data.frame(t(top5_potential[,-1]))
+top5_potential
+rm(temp, n, i)
+```
+Is Average Overall in EPL higher than other leagues?
+$$H_0: \mu_{E} = \mu_{O}$$
+$$H_1: \mu_{E} > \mu_{O}$$
+where $\mu_E$ is average Potential in EPL, $\mu_O$ is average Potential in other leagues.
+
+From the dataset, we have:
+```{r include=FALSE}
+x_E <- mean(subset(top5, League == 'EPL')$Potential)
+x_O <- mean(subset(top5, League != 'EPL')$Potential)
+s_E <- sd(subset(top5, League == 'EPL')$Potential)
+s_O <- sd(subset(top5, League != 'EPL')$Potential)
+n_E <- nrow(subset(top5, League == 'EPL'))
+n_O <- nrow(subset(top5, League != 'EPL'))
+            
+
+table(top5$League == 'EPL')
+```
+
+| League | $\mu$  |         | $s$   |        | $n$  |
+|-------|---------|---------|-------|--------|------|
+| EPL   | $\mu_E$ | 78.6264 | $s_E$ | 5.3305 | 645  |
+| Other | $\mu_O$ | 78.1134 | $s_O$ | 5.2898 | 2195 |
+
+Similarly, given sample variance, use the T-test:
+```{r echo=FALSE}
+t <- tTest(x_E, x_O, s_E, s_O, n_E, n_O)
+degf <- degF(x_E, x_O, s_E, s_O, n_E, n_O)
+
+print(paste('t-stat = ', t, sep = ''))
+print(paste('degree of freedom = ', degf, sep = ''))
+```
+At $\alpha = .01$, degree of freedom = 629
+```{r echo=FALSE}
+t_01 <- round(qt(.99, degf),4)
+print(paste('t_alpha = ', t_01, sep = ''))
+```
+Conclusion:
+$$ t = 2.1521 < t_{\alpha} = 2.3322 \implies \text{Fail to Reject } H_0$$
+<p> As such, at the $99\%$ confidence level, there does not appear to have reasons that the Average Potential in EPL is higher than that of other leagues either. </p>
+
+<h5>Remarks:</h5>
+
+>     At the 99% confidence level, it appears that while the Average Wage of players in EPL is higher than that of other leagues, the average player in EPL does not have higher Overall or Potential ratings.
+
+***
+<br/><br/><br/>
+
+***
+#### <font color = 'purple'> Is the difference in Average Wage related to players' Overall ratings? </font>
+***
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!-- | SECTION 4 | SECTION 4 | SECTION 4 | SECTION 4 | -->
+<div class="sectionbox">
+  <h4> Section 4: Difference between top 1 % and the rest </h4>
+</div>
+***
+
+**Questions to consider:**
+
+1.  Among top 1% Overall ratings, is there difference in Average Wage between EPL and the rest?
+2.  What about the remaining 99%?
+
+Partition among the top5 league players into top 1 % and the rest according to the Overall ratings:
+```{r echo=FALSE}
+k <- quantile(top5$Overall, probs = .99)
+top5_01 <- subset(top5, Overall >= k)
+top5_99 <- subset(top5, Overall < k)
+
+print(paste('The 99% quantile Overall among players from top 5 leagues is ', k, sep =''))
+```
+<p> As such, top5_01 consists of players whose Overall ratings are at least 88, and top5_99 of players whose ratings are below 88. </p>
+
+<div class="subsectionbox">
+  <h5> 4.1 |  --- Plots </h5>
+</div>
+
+**Among top 1%**
+```{r echo=FALSE}
+p1 <- ggplot(top5_01, aes(x = Wage, color = League)) + geom_density()
+p2 <- ggplot(top5_01, aes(x = Overall, color = League)) + geom_density()
+p3 <- ggplot(top5_01, aes(x = Potential, color = League)) + geom_density()
+grid_arrange_shared_legend_1col(p1, p2, p3)
+rm(p1, p2, p3)
+```
+<br/>
+
+Surprisingly, among the top 1% of players, La Liga players appear to have higher Wage, and Serie A appears to have players with higher Overall and Potential ratings.
+```{r echo=FALSE}
+table(top5_01$League)
+```
+
+**Among the other 99%**
+```{r echo=FALSE}
+p1 <- ggplot(top5_99, aes(x = Wage, color = League)) + geom_density()
+p2 <- ggplot(top5_99, aes(x = Overall, color = League)) + geom_density()
+p3 <- ggplot(top5_99, aes(x = Potential, color = League)) + geom_density()
+grid_arrange_shared_legend_1col(p1, p2, p3)
+rm(p1, p2, p3)
+```
+<br/>
+<div class="subsectionbox">
+  <h5> 4.2 |  --- Overall - Top 1% </h5>
+</div>
+<p> Quantiles of Wage among the top 1% of players from top 5 leagues: </p>
+```{r echo=FALSE}
+top5_01_wage <- data.frame(matrix(nrow = 5))
+top5_01_wage <- cbind(c('Bundesliga', 'EPL', 'La Liga', 'Ligue 1', 'Serie A'))
+
+n <- seq(.1, 1, .1)
+for (i in 1:length(n)) {
+  temp <- data.frame(tapply(top5_01$Wage, top5_01$League, quantile, probs = n[i]))
+  top5_01_wage <- cbind(top5_01_wage, temp)
+}
+colnames(top5_01_wage) <- c('League', paste(n*100, '%', sep = ''))
+top5_01_wage <- as.data.frame(t(top5_01_wage[,-1]))
+top5_01_wage
+rm(temp, i, n)
+```
+<br/>
+
+***
+#### <font color = 'purple'> Is Average Wage in EPL higher than other leagues? </font>
+***
+
+<p> From the graph and table above, it appears that the average wage is higher in EPL than in other leagues. To verify, conduct the Hypothesis Test: </p>
+$$H_0: \mu_{E} = \mu_{O}$$
+$$H_1: \mu_{E} > \mu_{O}$$
+where $\mu_E$ is average wage in EPL, $\mu_O$ is average wage in other leagues.
+
+From the dataset, we have:
+```{r include=FALSE}
+x_E <- mean(subset(top5_01, League == 'EPL')$Wage)
+x_O <- mean(subset(top5_01, League != 'EPL')$Wage)
+s_E <- sd(subset(top5_01, League == 'EPL')$Wage)
+s_O <- sd(subset(top5_01, League != 'EPL')$Wage)
+n_E <- nrow(subset(top5_01, League == 'EPL'))
+n_O <- nrow(subset(top5_01, League != 'EPL'))
+            
+
+table(top5_01$League == 'EPL')
+```
+
+| League | $\mu$  |          | $s$   |           | $n$  |
+|-------|---------|----------|-------|-----------|------|
+| EPL   | $\mu_E$ | 258,636  | $s_E$ |  60,872.4 | 11   |
+| Other | $\mu_O$ | 254,871  | $s_O$ | 119,048.9 | 31   |
+
+Test statistics, given sample variance, use the T-test as above, and given the data from top5:
+```{r echo=FALSE}
+t <- tTest(x_E, x_O, s_E, s_O, n_E, n_O)
+degf <- degF(x_E, x_O, s_E, s_O, n_E, n_O)
+
+print(paste('t-stat = ', t, sep = ''))
+print(paste('degree of freedom = ', degf, sep = ''))
+```
+At $\alpha = .01$, degree of freedom = 6
+```{r echo=FALSE}
+t_01 <- round(qt(.99, degf),4)
+print(paste('t_alpha = ', t_01, sep = ''))
+```
+Conclusion:
+$$ t = 0.1336 < t_{\alpha} = 3.1427 \implies \text{Fail to Reject } H_0$$
+As such, at the $99\%$ confidence level, it does not appear to have reasons that among the top 1% players, EPL players have higher Average Wage than the other 4 leagues. <br/>
+
+***
+#### <font color = 'purple'> However, is it those in La Liga who have Average Wage than other leagues? </font>
+***
+<p> From the graph above, it appears that among the top 1%, the average wage is higher in La Liga than in other leagues. To verify, conduct the Hypothesis Test: </p>
+$$H_0: \mu_{E} = \mu_{O}$$
+$$H_1: \mu_{E} > \mu_{O}$$
+where $\mu_E$ is average wage in La Liga, $\mu_O$ is average wage in other leagues.
+
+From the dataset, we have:
+```{r include=FALSE}
+x_E <- mean(subset(top5_01, League == 'La Liga')$Wage)
+x_O <- mean(subset(top5_01, League != 'La Liga')$Wage)
+s_E <- sd(subset(top5_01, League == 'La Liga')$Wage)
+s_O <- sd(subset(top5_01, League != 'La Liga')$Wage)
+n_E <- nrow(subset(top5_01, League == 'La Liga'))
+n_O <- nrow(subset(top5_01, League != 'La Liga'))
+            
+
+table(top5_01$League == 'La Liga')
+```
+
+| League  | $\mu$   |          | $s$   |           | $n$  |
+|---------|---------|----------|-------|-----------|------|
+| La Liga | $\mu_E$ | 307,125  | $s_E$ | 123,037.6 | 16   |
+| Other   | $\mu_O$ | 224,308  | $s_O$ |  81,814.8 | 26   |
+
+Test statistics, given sample variance, use the T-test as above, and given the data from top5:
+```{r echo=FALSE}
+t <- tTest(x_E, x_O, s_E, s_O, n_E, n_O)
+degf <- degF(x_E, x_O, s_E, s_O, n_E, n_O)
+
+print(paste('t-stat = ', t, sep = ''))
+print(paste('degree of freedom = ', degf, sep = ''))
+```
+At $\alpha = .01$, degree of freedom = 14
+```{r echo=FALSE}
+t_01 <- round(qt(.99, degf),4)
+print(paste('t_alpha = ', t_01, sep = ''))
+```
+Conclusion:
+$$ t = 2.3872 < t_{\alpha} = 2.6245 \implies \text{Fail to Reject } H_0$$
+Similarly, at the $99\%$ confidence level, it does not appear to have reasons that among the top 1% players, La Liga players have higher Average Wage than the other 4 leagues. <br/>
+
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<div class="subsectionbox">
+  <h5> 4.3 |  --- Overall - Remaining 99% </h5>
+</div>
+<p> Quantiles of Wage among the remaining 99% of players from top 5 leagues: </p>
+```{r echo=FALSE}
+top5_99_wage <- data.frame(matrix(nrow = 5))
+top5_99_wage <- cbind(c('Bundesliga', 'EPL', 'La Liga', 'Ligue 1', 'Serie A'))
+
+n <- seq(.1, 1, .1)
+for (i in 1:length(n)) {
+  temp <- data.frame(tapply(top5_99$Wage, top5_99$League, quantile, probs = n[i]))
+  top5_99_wage <- cbind(top5_99_wage, temp)
+}
+colnames(top5_99_wage) <- c('League', paste(n*100, '%', sep = ''))
+top5_99_wage <- as.data.frame(t(top5_99_wage[,-1]))
+top5_99_wage
+rm(temp, i, n)
+```
+<br/>
+
+***
+#### <font color = 'purple'> Is Average Wage in EPL higher than other leagues? </font>
+***
+<p> From the graph and table above, it appears that the average wage is higher in EPL than in other leagues. To verify, conduct the Hypothesis Test: </p>
+$$H_0: \mu_{E} = \mu_{O}$$
+$$H_1: \mu_{E} > \mu_{O}$$
+where $\mu_E$ is average wage in EPL, $\mu_O$ is average wage in other leagues.
+
+From the dataset, we have:
+```{r include=FALSE}
+x_E <- mean(subset(top5_99, League == 'EPL')$Wage)
+x_O <- mean(subset(top5_99, League != 'EPL')$Wage)
+s_E <- sd(subset(top5_99, League == 'EPL')$Wage)
+s_O <- sd(subset(top5_99, League != 'EPL')$Wage)
+n_E <- nrow(subset(top5_99, League == 'EPL'))
+n_O <- nrow(subset(top5_99, League != 'EPL'))
+            
+
+table(top5_99$League == 'EPL')
+```
+
+| League | $\mu$  |          | $s$   |           | $n$  |
+|-------|---------|----------|-------|-----------|------|
+| EPL   | $\mu_E$ |  49,243  | $s_E$ | 44,293.45 | 634  |
+| Other | $\mu_O$ |  25,886  | $s_O$ | 28,904.69 | 2164 |
+
+Test statistics, given sample variance, use the T-test as above, from given the data from top5:
+```{r echo=FALSE}
+t <- tTest(x_E, x_O, s_E, s_O, n_E, n_O)
+degf <- degF(x_E, x_O, s_E, s_O, n_E, n_O)
+
+print(paste('t-stat = ', t, sep = ''))
+print(paste('degree of freedom = ', degf, sep = ''))
+```
+At $\alpha = .01$, degree of freedom = 630
+```{r echo=FALSE}
+t_01 <- round(qt(.99, degf),4)
+print(paste('t_alpha = ', t_01, sep = ''))
+```
+Conclusion:
+$$ t = 12.5194 > t_{\alpha} = 2.3323 \implies \text{Reject } H_0$$
+As such, at the $99\%$ confidence level, there appears strong evidence that among the remaining 99% players, the Average Wage in EPL is higher than that of other leagues. <br/>
+
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+<!----------------------------------------------------------->
+***
+***
+***
+<div class="subsectionbox">
+  <h5> Concluding remarks </h5>
+</div>
+  As seen from the above exploratory plots and hypothesis tests, there appears strong reasons to support the hypothesis that:
+  
+1. Among the very top 1% of players: there are no differences between the average wages of players playing in EPL league and the rest of top 5 leagues. <br/>
+2. Among the remaining 99% of players: the average wages of EPL players are higher than the rest of top 5 leagues, while there are no differences in the average ratings and potentials among the players.
