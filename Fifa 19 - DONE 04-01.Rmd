@@ -1,5 +1,5 @@
 ---
-title: "Fifa 19: Exploration"
+title: "Fifa 19: Exploratory Analysis on Wage Distributions"
 output:
   html_document: default
   pdf_document: default
@@ -22,21 +22,10 @@ knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
 <br/>
 Main libraries: `ggplot2`, `tidyverse`, `dplyr`, `gridExtra`, `stringr`.
 ```{r libraries, warning=FALSE, echo=FALSE, message=FALSE}
-#install.packages('ggplot2', lib="C:/temp")
-#install.packages('stringr', lib="C:/temp")
-#install.packages('ggplot2', lib="C:/temp")
-
-#library(tidyvers)
-# library("readr", lib="C:/Rpackages")
-# library("rstudioapi", lib="C:/Rpackages")
-# library("tidyr", lib="C:/Rpackages")
-# library("tidyverse", lib="C:/Rpackages")
-
 # install.packages('crayon', lib="C:/temp")
 # install.packages('labeling', lib="C:/temp")
 # install.packages('withr', lib="C:/temp")
 # install.packages('ggplot2', lib="C:/temp")
-
 # install.packages('rstudioapi', lib="C:/temp")
 # install.packages('cli', lib="C:/temp")
 # install.packages('tibble', lib="C:/temp")
@@ -45,15 +34,15 @@ Main libraries: `ggplot2`, `tidyverse`, `dplyr`, `gridExtra`, `stringr`.
 # install.packages('purrr', lib="C:/temp")
 # install.packages('dplyr', lib="C:/temp")
 # install.packages('forcats', lib="C:/temp")
+# install.packages('backports', lib="C:/temp")
 # install.packages('tidyverse', lib="C:/temp")
 # install.packages('stringr', lib="C:/temp")
 # install.packages('gridExtra', lib="C:/temp")
 # install.packages('caret', lib="C:/temp")
 # install.packages('ggpubr', lib="C:/temp")
-
 # install.packages('corrplot', lib="C:/temp")
-library('corrplot', lib="C:/temp")
 
+library('corrplot', lib="C:/temp")
 library(crayon, lib="C:/temp")
 library(labeling, lib="C:/temp")
 library(withr, lib="C:/temp")
@@ -76,15 +65,6 @@ library('tidyverse', lib="C:/temp")
 library('caret', lib="C:/temp")
 library('ggpubr', lib="C:/temp")
 library(grid)
-
-# library(ggplot2)
-# library(stringr)
-# library(tidyverse)
-# library(caret)
-# library(ggpubr)
-# library(gridExtra)
-# library(grid)
-# library(corrplot)
 ```
 <!-- CSS | CSS | CSS | CSS | CSS | CSS | CSS | CSS -->
 ```{css echo=FALSE}
@@ -201,9 +181,9 @@ df[1,c('Value','Wage', 'Release.Clause')]
 x <- as.character(df$Value)
 y <- as.character(df$Wage)
 z <- as.character(df$Release.Clause)
-x <- gsub(".*�", "", x)
-y <- gsub(".*�", "", y)
-z <- gsub(".*�", "", z)
+x <- gsub(".*¬", "", x)
+y <- gsub(".*¬", "", y)
+z <- gsub(".*¬", "", z)
 
 for (i in 1:nrow(df)) {
   if (toupper(str_sub(x[i], -1, -1)) == 'M') {       
@@ -315,7 +295,7 @@ unique(df$Club)[c(8,9)]
 ```
 <p> Rename clubs from top 5 leagues: `Serie A`, `EPL`, `La Liga`, `Bundesliga`, `Ligue 1` </p>
 ```{r echo=FALSE}
-original_club_names <- c('Atlético Madrid', 'FC Bayern München', 'AS Saint-�???tienne', '1. FC Köln', 'CD Leganés', '1. FC Nürnberg', 'Deportivo Alavés', 'Borussia Mönchengladbach', 'Nîmes Olympique')
+original_club_names <- c('AtlÃ©tico Madrid', 'FC Bayern MÃ¼nchen', 'AS Saint-Ã???tienne', '1. FC KÃ¶ln', 'CD LeganÃ©s', '1. FC NÃ¼rnberg', 'Deportivo AlavÃ©s', 'Borussia MÃ¶nchengladbach', 'NÃ®mes Olympique')
 new_club_names <- c('Atletico Madrid', 'FC Bayern Munchen', 'AS Saint-Etienne', '1. FC Koln', 'CD Leganes', '1. FC Nurnberg', 'Deportivo Alaves', 'Borussia Munchengladbach', 'Nimes Olympique')
 
 for (i in 1:length(original_club_names)) {
